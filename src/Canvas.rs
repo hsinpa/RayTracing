@@ -1,46 +1,48 @@
-use cgmath::Vector4;
+use cgmath::{Vector4, Zero};
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::window::Window;
+use rayon::prelude::*;
 
 pub struct PixelCanvas {
-    pixels: Pixels,
+    canvas: Pixels,
     width: u32,
     height: u32,
+    pixels: Vec<Vector4<u8>>,
 }
 
 impl PixelCanvas {
     pub fn new(window : &Window) -> Self{
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window);
+        println!("Window size {}", window_size.width * window_size.height);
 
         Self {
             width : window_size.width,
             height : window_size.height,
-            pixels: Pixels::new(window_size.width, window_size.height, surface_texture).unwrap()
+            canvas: Pixels::new(window_size.width, window_size.height, surface_texture).unwrap(),
+            pixels: vec![Vector4::zero(); (window_size.width * window_size.height) as usize],
         }
     }
 
     pub fn set_color(&mut self, x: u32, y: u32, color: Vector4<u8>) {
-        let frame = self.pixels.get_frame();
-        let frame_chunks = frame.chunks_exact_mut(4);
-        let index = ((y * self.width) + x) as u8;
-        frame_chunks[index][0] = color.x; // R
-        frame_chunks[index][1] = color.y; // G
-        frame_chunks[index][2] = color.z; // B
-        frame_chunks[index][3] = color.w; // A
-
-        self.pixels.render().unwrap();
+        let index = ((y * self.width) + x) as usize;
+        self.pixels[index] = color;
     }
 
     pub fn render(&mut self) {
-        let frame = self.pixels.get_frame();
-        for pixel in frame.chunks_exact_mut(4) {
-            pixel[0] = 0; // R
-            pixel[1] = 0; // G
-            pixel[2] = 255; // B
-            pixel[3] = 255; // A
+        let frame = self.canvas.get_frame();
+        let chunks = frame.chunks_exact_mut(4);
+
+        for (index, pixel) in chunks.enumerate() {
+            pixel[0] = self.pixels[index].x; // R
+            pixel[1] = self.pixels[index].y; // G
+            pixel[2] = self.pixels[index].z; // B
+            pixel[3] = self.pixels[index].w; // A
         }
-        self.pixels.render().unwrap();
+        self.canvas.render().unwrap();
     }
 
+    pub fn clear(&mut self) {
+        self.pixels.par_iter_mut().for_each(|color| color.set_zero());
+    }
 }

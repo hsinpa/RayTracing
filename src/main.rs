@@ -1,5 +1,6 @@
 mod Canvas;
 mod utility;
+mod Scene;
 
 use winit::{
     event::{Event, WindowEvent},
