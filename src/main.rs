@@ -1,6 +1,6 @@
-mod Canvas;
+mod canvas;
 mod utility;
-mod Scene;
+mod environment;
 
 use winit::{
     event::{Event, WindowEvent},
@@ -9,7 +9,8 @@ use winit::{
 };
 
 use pixels::{Error, Pixels, SurfaceTexture};
-use Canvas::PixelCanvas;
+use canvas::PixelCanvas;
+use environment::Scene;
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
 const BOX_SIZE: i16 = 64;
@@ -21,6 +22,8 @@ fn main() {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let mut canvas = PixelCanvas::new(&window);
+    let mut scene = Scene::new(canvas);
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -30,7 +33,9 @@ fn main() {
                 window_id,
             } if window_id == window.id() => *control_flow = ControlFlow::Exit,
             Event::RedrawRequested(_) => {
-                canvas.render();
+
+                scene.process();
+
             },
             _ => (),
 

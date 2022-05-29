@@ -1,4 +1,4 @@
-use cgmath::{Vector4, Zero};
+use cgmath::{Vector2, Vector4, Zero};
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::window::Window;
 use rayon::prelude::*;
@@ -24,8 +24,18 @@ impl PixelCanvas {
         }
     }
 
+    pub fn get_size(&self) -> Vector2<u32> {
+        return Vector2::new(self.width, self.height);
+    }
+
     pub fn set_color(&mut self, x: u32, y: u32, color: Vector4<u8>) {
-        let index = ((y * self.width) + x) as usize;
+        let index = (( (self.height - 1 - y) * self.width) + x) as usize;
+
+        if index >= self.pixels.len() {
+            println!("Set Color out of index {}, y {}", index, y);
+            return;
+        }
+
         self.pixels[index] = color;
     }
 

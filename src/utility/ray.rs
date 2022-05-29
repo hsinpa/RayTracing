@@ -21,7 +21,7 @@ impl Ray {
         self.direction.clone()
     }
 
-    pub fn at(&self, t: f64) -> Vector3<f32> {
+    pub fn at(&self, t: f32) -> Vector3<f32> {
         self.origin + (t * self.direction)
     }
 }
