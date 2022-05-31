@@ -1,5 +1,9 @@
 use cgmath::{InnerSpace, Vector3, Vector4};
+use cgmath::num_traits::Float;
 use crate::PixelCanvas;
+use crate::transform::hittable::{HitRecord, Hittable};
+use crate::transform::hittable_list::HittableList;
+use crate::transform::sphere::Sphere;
 use crate::utility::ray::Ray;
 
 pub struct Scene {
@@ -12,7 +16,8 @@ pub struct Scene {
 
     focal_length: f32,
     aspect_ratio: f32,
-    camera: Vector3<f32>
+    camera: Vector3<f32>,
+    world : HittableList,
 }
 
 impl Scene {
@@ -23,6 +28,12 @@ impl Scene {
 
         let image_width = canvas.get_size().x;
         let image_height = (image_width as f32 / aspect_ratio) as u32;
+
+
+        //World
+        let mut world: HittableList = HittableList::new();
+        world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5) ));
+        world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0) ));
 
         //Camera
         let viewport_height:f32 = 2.0;
@@ -39,7 +50,8 @@ impl Scene {
             image_height: image_height,
             focal_length: focal_length,
             aspect_ratio: aspect_ratio,
-            camera: origin
+            camera: origin,
+            world: world
         }
     }
 
@@ -51,6 +63,8 @@ impl Scene {
         let lower_left_corner = self.camera - (horizontal / 2.0) - (vertical / 2.0) - Vector3::new(0.0, 0.0, self.focal_length);
 
 
+
+
         for j in (0..self.image_height-1).rev() {
             for i in 0..self.image_width-1 {
                 let u = i as f32 / (self.image_width - 1) as f32;
@@ -58,7 +72,7 @@ impl Scene {
 
                 let direction = lower_left_corner + (u * horizontal) + (v * vertical) - self.camera;
                 let ray = Ray::new(self.camera.clone(), direction);
-                let hit_color = Scene::ray_color(&ray);
+                let hit_color = Scene::ray_color(&ray, &self.world);
 
                 let x = (u * (self.image_width as f32)) as u32;
                 let y = (v * (self.image_height as f32)) as u32;
@@ -77,21 +91,19 @@ impl Scene {
         let c = oc.magnitude2() - (radius * radius);
         let discriminant = (half_b * half_b) - (a * c);
 
-        if (discriminant < 0.0) {
+        if discriminant < 0.0 {
             return -1.0;
         } else {
          return (-half_b - discriminant.sqrt()) / a;
         }
     }
 
-    pub fn ray_color(ray: &Ray) -> Vector4<f32> {
-        let t = Scene::hit_sphere(Vector3::new(0.0,0.0,-1.0), 0.5, &ray);
+    pub fn ray_color(ray: &Ray, world: &dyn Hittable) -> Vector4<f32> {
 
-        if (t > 0.0) {
-            let normal = (ray.at(t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
-            let mut n_color = 0.5 * Vector4::new( normal.x + 1.0, normal.y + 1.0, normal.z + 1.0, 1.0);
-                    n_color.w = 1.0;
-            return n_color;
+        let mut rec = HitRecord::new();
+
+        if world.hit(ray, 0.0, f32::MAX, &mut rec) {
+            return Scene::vec3_to_vec4(&(0.5 * (rec.normal + Vector3::new(1.0, 1.0, 1.0)) ));
         }
 
         let unit_direction = ray.get_direction().normalize();
@@ -104,5 +116,9 @@ impl Scene {
     pub fn convert_8bit_color(color: &Vector4<f32>) -> Vector4<u8> {
         let target_color = color * 255.0;
         return Vector4::new(target_color.x as u8, target_color.y as u8, target_color.z as u8 ,target_color.w as u8);
+    }
+
+    pub fn vec3_to_vec4(c: &Vector3<f32>) -> Vector4<f32> {
+        return Vector4::new(c.x, c.y, c.z ,1.0);
     }
 }

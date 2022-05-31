@@ -1,5 +1,6 @@
 use cgmath::{InnerSpace, Vector3};
-use crate::utility::hittable::{HitRecord, Hittable};
+use crate::Scene;
+use crate::transform::hittable::{HitRecord, Hittable};
 use crate::utility::ray::Ray;
 
 pub struct Sphere {
@@ -40,6 +41,9 @@ impl Hittable for Sphere {
         rec.t = root;
         rec.p = r.at(rec.t);
         rec.normal = (rec.p - self.center) / self.radius;
+
+        let outward_normal = (rec.p - self.center) / self.radius;
+        rec.set_face_normal(r, outward_normal);
 
         return true;
     }

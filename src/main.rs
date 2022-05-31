@@ -1,6 +1,7 @@
 mod canvas;
 mod utility;
 mod environment;
+mod transform;
 
 use winit::{
     event::{Event, WindowEvent},
