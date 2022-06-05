@@ -11,7 +11,6 @@ use crate::utility::utility_func::UtilityFunc;
 pub struct Scene {
     pixel_canvas : PixelCanvas,
     camera: Camera,
-    utilities: UtilityFunc,
     world : HittableList,
 
     image_width: u32,
@@ -43,7 +42,6 @@ impl Scene {
             image_height: image_height,
             camera: camera,
             world: world,
-            utilities: UtilityFunc::new(),
         }
     }
 
@@ -55,10 +53,11 @@ impl Scene {
 
                 let mut pixel_color: Vector4<f32> = Vector4::zero();
                 for sample_index in 0..self.camera.sampler {
-                    let u = (i as f32 + self.utilities.get_random_float())/ (self.image_width - 1) as f32;
-                    let v = (j as f32  + self.utilities.get_random_float())/ (self.image_height - 1) as f32;
+                    let u = (i as f32 + UtilityFunc::get_random_float())/ (self.image_width - 1) as f32;
+                    let v = (j as f32  + UtilityFunc::get_random_float())/ (self.image_height - 1) as f32;
                     let ray = self.camera.get_ray(u,v);
-                    let hit_color = Scene::ray_color(&ray, &self.world);
+
+                    let hit_color = Scene::ray_color(&ray, &self.world, 20);
                     pixel_color += hit_color;
                 }
 
@@ -88,12 +87,19 @@ impl Scene {
         }
     }
 
-    pub fn ray_color(ray: &Ray, world: &dyn Hittable) -> Vector4<f32> {
+    pub fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vector4<f32> {
 
         let mut rec = HitRecord::new();
 
+        if depth <= 0 {
+            return Vector4::zero();
+        }
+
         if world.hit(ray, 0.0, f32::MAX, &mut rec) {
-            return Scene::vec3_to_vec4(&(0.5 * (rec.normal + Vector3::new(1.0, 1.0, 1.0)) ));
+            let target = rec.p + rec.normal  + UtilityFunc::random_in_unit_sphere();
+            let reflect_ray = Ray::new(rec.p, target - rec.p);
+            let hit_color = Scene::ray_color(&reflect_ray, world, depth - 1);
+            return 0.5 * hit_color;
         }
 
         let unit_direction = ray.get_direction().normalize();
