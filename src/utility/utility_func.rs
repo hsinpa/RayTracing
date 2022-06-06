@@ -24,12 +24,16 @@ impl UtilityFunc {
     pub fn random_in_unit_sphere() -> Vector3<f32> {
         loop {
             let p = UtilityFunc::random_vector3_rangge(-1.0, 1.0);
-            if p.magnitude2() >= 1.0 {
+            if UtilityFunc::length_squared(&p) >= 1.0 {
                 continue;
             }
             return p;
 
         }
+    }
+
+    pub fn length_squared(vec: &Vector3<f32>) -> f32 {
+        (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z)
     }
 
     pub fn degrees_to_radians(degrees: f32) -> f32 {

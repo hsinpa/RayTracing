@@ -2,6 +2,7 @@ use cgmath::{InnerSpace, Vector3};
 use crate::Scene;
 use crate::transform::hittable::{HitRecord, Hittable};
 use crate::utility::ray::Ray;
+use crate::utility::utility_func::UtilityFunc;
 
 pub struct Sphere {
     pub center: Vector3<f32>,
@@ -20,9 +21,9 @@ impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
 
         let oc = r.get_origin() - self.center;
-        let a = r.get_direction().magnitude2();
+        let a = UtilityFunc::length_squared(&r.get_direction());
         let half_b = Vector3::dot(oc, r.get_direction());
-        let c = oc.magnitude2() - (self.radius * self.radius);
+        let c = UtilityFunc::length_squared(&oc) - (self.radius * self.radius);
 
         let discriminant = (half_b * half_b) - (a * c);
         if discriminant < 0.0 {

@@ -57,7 +57,7 @@ impl Scene {
                     let v = (j as f32  + UtilityFunc::get_random_float())/ (self.image_height - 1) as f32;
                     let ray = self.camera.get_ray(u,v);
 
-                    let hit_color = Scene::ray_color(&ray, &self.world, 20);
+                    let hit_color = Scene::ray_color(&ray, &self.world, 50);
                     pixel_color += hit_color;
                 }
 
@@ -71,20 +71,6 @@ impl Scene {
         }
 
         self.pixel_canvas.render();
-    }
-
-    pub fn hit_sphere(center : Vector3<f32>, radius : f32, r : &Ray) -> f32 {
-        let oc = r.get_origin() - center;
-        let a = r.get_direction().magnitude2();
-        let half_b = Vector3::dot(oc, r.get_direction());
-        let c = oc.magnitude2() - (radius * radius);
-        let discriminant = (half_b * half_b) - (a * c);
-
-        if discriminant < 0.0 {
-            return -1.0;
-        } else {
-         return (-half_b - discriminant.sqrt()) / a;
-        }
     }
 
     pub fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vector4<f32> {
@@ -113,9 +99,9 @@ impl Scene {
         let scale = 1.0 / samples_per_pixel as f32;
 
         let target_color: Vector4<f32> = color * scale;
-        let mut r = target_color.x.clamp(0.0, 0.999) * 256.0;
-        let mut g = target_color.y.clamp(0.0, 0.999) * 256.0;
-        let mut b = target_color.z.clamp(0.0, 0.999) * 256.0;
+        let mut r = target_color.x.sqrt().clamp(0.0, 0.999) * 255.0;
+        let mut g = target_color.y.sqrt().clamp(0.0, 0.999) * 255.0;
+        let mut b = target_color.z.sqrt().clamp(0.0, 0.999) * 255.0;
         let mut a = 255.0;
 
         return Vector4::new(r as u8, g as u8, b as u8 ,a as u8);
