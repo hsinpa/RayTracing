@@ -34,7 +34,7 @@ impl Scene {
         //Camera
         let origin:Vector3<f32> = Vector3::new(0.0,0.0,0.0);
         let mut camera = Camera::new(origin);
-                camera.set_sampler(1);
+                camera.set_sampler(20);
 
         Self {
             pixel_canvas: canvas,
@@ -49,6 +49,8 @@ impl Scene {
         println!("Image width {}, image_height {}", self.image_width, self.image_height);
 
         for j in (0..self.image_height).rev() {
+            println!("Scanline remaining {}", j);
+
             for i in 0..self.image_width {
 
                 let mut pixel_color: Vector4<f32> = Vector4::zero();
@@ -57,7 +59,7 @@ impl Scene {
                     let v = (j as f32  + UtilityFunc::get_random_float())/ (self.image_height - 1) as f32;
                     let ray = self.camera.get_ray(u,v);
 
-                    let hit_color = Scene::ray_color(&ray, &self.world, 50);
+                    let hit_color = Scene::ray_color(&ray, &self.world, 5);
                     pixel_color += hit_color;
                 }
 
@@ -81,7 +83,7 @@ impl Scene {
             return Vector4::zero();
         }
 
-        if world.hit(ray, 0.0, f32::MAX, &mut rec) {
+        if world.hit(ray, 0.0001, f32::MAX, &mut rec) {
             let target = rec.p + rec.normal  + UtilityFunc::random_in_unit_sphere();
             let reflect_ray = Ray::new(rec.p, target - rec.p);
             let hit_color = Scene::ray_color(&reflect_ray, world, depth - 1);

@@ -1,4 +1,4 @@
-use cgmath::{dot, Vector3, Zero};
+use cgmath::{dot, InnerSpace, Vector3, Zero};
 use crate::utility::ray::Ray;
 
 #[derive(Debug, Copy, Clone)]
@@ -21,7 +21,7 @@ impl HitRecord {
     }
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vector3<f32>) {
-        self.front_face = dot(r.get_direction(), outward_normal) < 0.0;
+        self.front_face = dot(r.get_direction(), outward_normal.normalize()) < 0.0;
         self.normal = if self.front_face {outward_normal} else {-outward_normal};
     }
 }

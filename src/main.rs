@@ -24,6 +24,7 @@ fn main() {
 
     let mut canvas = PixelCanvas::new(&window);
     let mut scene = Scene::new(canvas);
+    scene.process();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -33,9 +34,8 @@ fn main() {
                 event: WindowEvent::CloseRequested,
                 window_id,
             } if window_id == window.id() => *control_flow = ControlFlow::Exit,
-            Event::RedrawRequested(_) => {
 
-                scene.process();
+            Event::RedrawRequested(_) => {
 
             },
             _ => (),
