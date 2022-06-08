@@ -1,5 +1,10 @@
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
+use std::rc::Rc;
 use cgmath::{InnerSpace, Vector3, Vector4, Zero};
 use cgmath::num_traits::Float;
+use crate::material::lambertian::LambertianMat;
+use crate::material::materials::Materials;
 use crate::PixelCanvas;
 use crate::transform::hittable::{HitRecord, Hittable};
 use crate::transform::hittable_list::HittableList;
@@ -7,18 +12,18 @@ use crate::transform::sphere::Sphere;
 use crate::utility::ray::Ray;
 use crate::transform::camera::Camera;
 use crate::utility::utility_func::UtilityFunc;
+use crate::utility::static_flags::{LAMBERTIAN_MAT_ID};
 
 pub struct Scene {
+    materials: Rc<RefCell<Materials>>,
     pixel_canvas : PixelCanvas,
     camera: Camera,
     world : HittableList,
-
     image_width: u32,
     image_height: u32,
 }
 
 impl Scene {
-
     pub fn new(canvas: PixelCanvas) -> Self {
         //Image
         let aspect_ratio:f32 = 16.0 / 9.0;
@@ -26,17 +31,26 @@ impl Scene {
         let image_width = canvas.get_size().x;
         let image_height = (image_width as f32 / aspect_ratio) as u32;
 
-        //World
+        let lambertian_mat= Rc::new(RefCell::new(LambertianMat::new(LAMBERTIAN_MAT_ID, Vector4::new(0.5, 1.0, 1.0, 1.0))));
+
         let mut world: HittableList = HittableList::new();
-        world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5) ));
-        world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0) ));
+        let mut materialsRc = Rc::new(RefCell::new(Materials::new()));
+        let materials = materialsRc.borrow_mut();
+        materials..(LAMBERTIAN_MAT_ID, lambertian_mat);
+
+        {
+            //World
+            world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5, materials.get(LAMBERTIAN_MAT_ID).unwrap().borrow()) ));
+            world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0, materials.get(LAMBERTIAN_MAT_ID).unwrap().borrow()) ));
+        }
 
         //Camera
         let origin:Vector3<f32> = Vector3::new(0.0,0.0,0.0);
         let mut camera = Camera::new(origin);
-                camera.set_sampler(20);
+                camera.set_sampler(10);
 
         Self {
+            materials: materialsRc,
             pixel_canvas: canvas,
             image_width: image_width,
             image_height: image_height,
@@ -84,7 +98,7 @@ impl Scene {
         }
 
         if world.hit(ray, 0.0001, f32::MAX, &mut rec) {
-            let target = rec.p + rec.normal  + UtilityFunc::random_in_unit_sphere();
+            let target = rec.p + UtilityFunc::random_in_hemisphere(&rec.normal);
             let reflect_ray = Ray::new(rec.p, target - rec.p);
             let hit_color = Scene::ray_color(&reflect_ray, world, depth - 1);
             return 0.5 * hit_color;

@@ -32,8 +32,23 @@ impl UtilityFunc {
         }
     }
 
+    pub fn random_in_hemisphere(normal: &Vector3<f32>) -> Vector3<f32>{
+        let in_unit_sphere =  UtilityFunc::random_in_unit_sphere().normalize();
+        if Vector3::dot(in_unit_sphere, *normal) > 0.0 {
+            return in_unit_sphere;
+        }
+
+        return in_unit_sphere * -1.0;
+    }
+
     pub fn length_squared(vec: &Vector3<f32>) -> f32 {
         (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z)
+    }
+
+    pub fn vector_near_zero(vec: &Vector3<f32>) -> bool {
+        let s:f32 = 0.00001;
+        return vec.x.abs() < s && vec.y.abs() < s && vec.z.abs() < s;
+
     }
 
     pub fn degrees_to_radians(degrees: f32) -> f32 {

@@ -1,4 +1,7 @@
+use std::cell::{Ref, RefCell};
+use std::rc::Rc;
 use cgmath::{dot, InnerSpace, Vector3, Zero};
+use crate::material::material_interface::MaterialTrait;
 use crate::utility::ray::Ray;
 
 #[derive(Debug, Copy, Clone)]
@@ -7,16 +10,17 @@ pub struct HitRecord {
     pub normal: Vector3<f32>,
     pub t: f32,
     pub front_face: bool,
+    pub mat_ptr: u32,
 }
 
 impl HitRecord {
-
     pub fn new() -> Self {
         Self {
             p: Vector3::zero(),
             normal: Vector3::zero(),
             t: 0.0,
-            front_face: false
+            front_face: false,
+            mat_ptr : 0,
         }
     }
 
