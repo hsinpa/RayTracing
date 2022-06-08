@@ -1,4 +1,3 @@
-use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
 use std::rc::Rc;
 use cgmath::{InnerSpace, Vector3, Vector4, Zero};
@@ -33,16 +32,15 @@ impl Scene {
 
         let lambertian_mat= Rc::new(RefCell::new(LambertianMat::new(LAMBERTIAN_MAT_ID, Vector4::new(0.5, 1.0, 1.0, 1.0))));
 
+        //World
         let mut world: HittableList = HittableList::new();
-        let mut materialsRc = Rc::new(RefCell::new(Materials::new()));
-        let materials = materialsRc.borrow_mut();
-        materials..(LAMBERTIAN_MAT_ID, lambertian_mat);
+        world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5, lambertian_mat.clone() )));
+        world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0, lambertian_mat.clone()) ));
 
-        {
-            //World
-            world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5, materials.get(LAMBERTIAN_MAT_ID).unwrap().borrow()) ));
-            world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0, materials.get(LAMBERTIAN_MAT_ID).unwrap().borrow()) ));
-        }
+        let mut materials = Materials::new();
+        let mut materials_rc = Rc::new(RefCell::new(materials));
+        //materials.push(LAMBERTIAN_MAT_ID, lambertian_mat);
+        materials_rc.borrow_mut().push(LAMBERTIAN_MAT_ID, lambertian_mat);
 
         //Camera
         let origin:Vector3<f32> = Vector3::new(0.0,0.0,0.0);
@@ -50,7 +48,7 @@ impl Scene {
                 camera.set_sampler(10);
 
         Self {
-            materials: materialsRc,
+            materials: materials_rc,
             pixel_canvas: canvas,
             image_width: image_width,
             image_height: image_height,
@@ -61,7 +59,6 @@ impl Scene {
 
     pub fn process(&mut self) {
         println!("Image width {}, image_height {}", self.image_width, self.image_height);
-
         for j in (0..self.image_height).rev() {
             println!("Scanline remaining {}", j);
 
@@ -98,7 +95,8 @@ impl Scene {
         }
 
         if world.hit(ray, 0.0001, f32::MAX, &mut rec) {
-            let target = rec.p + UtilityFunc::random_in_hemisphere(&rec.normal);
+            let target = rec.p + rec.normal  + UtilityFunc::random_in_unit_sphere();
+            // let target = rec.p + UtilityFunc::random_in_hemisphere(&rec.normal);
             let reflect_ray = Ray::new(rec.p, target - rec.p);
             let hit_color = Scene::ray_color(&reflect_ray, world, depth - 1);
             return 0.5 * hit_color;

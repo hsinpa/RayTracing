@@ -18,7 +18,11 @@ impl Materials {
         self.mat_list.insert(id, mat);
     }
 
-    pub fn get(&self, id: u32) -> Option<&Rc<RefCell<dyn MaterialTrait>>> {
-        return   self.mat_list.get(&id);
+    pub fn get(&self, id: u32) -> Option<Rc<RefCell<dyn MaterialTrait>>> {
+        let selected_mat = self.mat_list.get(&id);
+        if selected_mat.is_some() {
+            return Some(selected_mat.unwrap().clone());
+        }
+        None
     }
 }

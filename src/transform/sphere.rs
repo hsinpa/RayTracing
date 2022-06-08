@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell};
+use std::cell::{RefCell};
 use std::rc::Rc;
 use cgmath::{InnerSpace, Vector3};
 use crate::material::material_interface::MaterialTrait;
@@ -7,14 +7,14 @@ use crate::transform::hittable::{HitRecord, Hittable};
 use crate::utility::ray::Ray;
 use crate::utility::utility_func::UtilityFunc;
 
-pub struct Sphere<'mat> {
+pub struct Sphere{
     pub center: Vector3<f32>,
     pub radius: f32,
-    pub mat_ptr: &'mat Rc<RefCell<dyn MaterialTrait>>
+    pub mat_ptr: Rc<RefCell<dyn MaterialTrait>>
 }
 
-impl<'mat> Sphere<'mat>{
-    pub fn new(center: Vector3<f32>, radius: f32, material: &'mat Rc<RefCell<dyn MaterialTrait>>) -> Self {
+impl Sphere{
+    pub fn new(center: Vector3<f32>, radius: f32, material: Rc<RefCell<dyn MaterialTrait>>) -> Self {
         Self {
             center, radius,
             mat_ptr: material
@@ -22,9 +22,8 @@ impl<'mat> Sphere<'mat>{
     }
 }
 
-impl<'mat> Hittable for Sphere<'mat> {
+impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-
         let oc = r.get_origin() - self.center;
         let a = UtilityFunc::length_squared(&r.get_direction());
         let half_b = Vector3::dot(oc, r.get_direction());
