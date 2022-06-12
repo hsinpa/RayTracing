@@ -27,18 +27,21 @@ impl UtilityFunc {
             if UtilityFunc::length_squared(&p) >= 1.0 {
                 continue;
             }
-            return p;
-
+            return p.normalize();
         }
     }
 
     pub fn random_in_hemisphere(normal: &Vector3<f32>) -> Vector3<f32>{
-        let in_unit_sphere =  UtilityFunc::random_in_unit_sphere().normalize();
+        let in_unit_sphere =  UtilityFunc::random_in_unit_sphere();
         if Vector3::dot(in_unit_sphere, *normal) > 0.0 {
             return in_unit_sphere;
         }
 
         return in_unit_sphere * -1.0;
+    }
+
+    pub fn reflect(v: &Vector3<f32>, n : &Vector3<f32>) -> Vector3<f32> {
+        return v - 2.0 * Vector3::dot(*v, *n) * n;
     }
 
     pub fn length_squared(vec: &Vector3<f32>) -> f32 {
