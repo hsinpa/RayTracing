@@ -1,4 +1,5 @@
 use cgmath::{InnerSpace, Vector3};
+use cgmath::num_traits::Pow;
 
 pub struct UtilityFunc {
 }
@@ -42,6 +43,22 @@ impl UtilityFunc {
 
     pub fn reflect(v: &Vector3<f32>, n : &Vector3<f32>) -> Vector3<f32> {
         return v - 2.0 * Vector3::dot(*v, *n) * n;
+    }
+
+    pub fn refract(uv: &Vector3<f32>, n : &Vector3<f32>, etai_over_eta: f32) -> Vector3<f32> {
+        let cos_theta = f32::min(Vector3::dot(-(*uv), *n), 1.0);
+
+        let r_out_perp = etai_over_eta * (uv + (cos_theta * n));
+        let r_out_parallel = (1.0 - UtilityFunc::length_squared(&r_out_perp)).abs().sqrt() * -1.0 * n;
+
+        return r_out_perp + r_out_parallel;
+    }
+
+    pub fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
+        let mut r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+        r0 = r0 * r0;
+
+        return r0 + (1.0 - r0) * (1.0 - cosine).pow(5);
     }
 
     pub fn length_squared(vec: &Vector3<f32>) -> f32 {

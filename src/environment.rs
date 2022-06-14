@@ -4,6 +4,7 @@ use std::rc::Rc;
 use cgmath::{ElementWise, InnerSpace, Vector3, Vector4, Zero};
 use cgmath::num_traits::Float;
 use pixels::wgpu::Color;
+use crate::material::dielectric::DielectricMat;
 use crate::material::lambertian::LambertianMat;
 use crate::material::materials::Materials;
 use crate::material::metal::MetalMat;
@@ -33,21 +34,26 @@ impl Scene {
         let image_height = (image_width as f32 / aspect_ratio) as u32;
 
         let material_ground= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.8, 0.8, 0.0, 1.0))));
-        let material_center= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.7, 0.3, 0.3, 1.0))));
-        let material_left= Rc::new(RefCell::new(MetalMat::new(Vector4::new(0.8, 0.8, 0.8, 1.0), 0.3)));
-        let material_right= Rc::new(RefCell::new(MetalMat::new(Vector4::new(0.8, 0.6, 0.2, 1.0), 1.0)));
+        // let material_center= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.7, 0.3, 0.3, 1.0))));
+        // let material_left= Rc::new(RefCell::new(MetalMat::new(Vector4::new(0.8, 0.8, 0.8, 1.0), 0.3)));
+
+        let material_center= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.1, 0.2, 0.5, 1.0))));
+        let material_left= Rc::new(RefCell::new(DielectricMat{ index_of_fraction: 1.5}));
+
+        let material_right= Rc::new(RefCell::new(MetalMat::new(Vector4::new(0.8, 0.6, 0.2, 1.0), 0.0)));
 
         //World
         let mut world: HittableList = HittableList::new();
         world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0, material_ground) ));
         world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5, material_center )));
-        world.add(Box::new( Sphere::new(Vector3::new(-1.0, 0.0, -1.0), 0.5, material_left )));
+        world.add(Box::new( Sphere::new(Vector3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone() )));
+        world.add(Box::new( Sphere::new(Vector3::new(-1.0, 0.0, -1.0), -0.4, material_left.clone() )));
         world.add(Box::new( Sphere::new(Vector3::new(1.0, 0.0, -1.0), 0.5, material_right) ));
 
         //Camera
         let origin:Vector3<f32> = Vector3::new(0.0,0.0,0.0);
         let mut camera = Camera::new(origin);
-                camera.set_sampler(10);
+                camera.set_sampler(20);
 
         Self {
             pixel_canvas: canvas,
@@ -71,7 +77,7 @@ impl Scene {
                     let v = (j as f32  + UtilityFunc::get_random_float())/ (self.image_height - 1) as f32;
                     let ray = self.camera.get_ray(u,v);
 
-                    let hit_color = Scene::ray_color(&ray, &self.world, 5);
+                    let hit_color = Scene::ray_color(&ray, &self.world, 10);
                     pixel_color += hit_color;
                 }
 
