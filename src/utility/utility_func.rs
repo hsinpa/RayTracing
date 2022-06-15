@@ -41,6 +41,14 @@ impl UtilityFunc {
         return in_unit_sphere * -1.0;
     }
 
+    pub fn random_in_unit_disk() -> Vector3<f32> {
+        loop {
+            let p = Vector3::new(UtilityFunc::get_random_range(-1.0, 1.0), UtilityFunc::get_random_range(-1.0, 1.0), 0.0);
+            if UtilityFunc::length_squared(&p) >= 1.0 { continue;}
+            return p;
+        }
+    }
+
     pub fn reflect(v: &Vector3<f32>, n : &Vector3<f32>) -> Vector3<f32> {
         return v - 2.0 * Vector3::dot(*v, *n) * n;
     }

@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::f32::consts::PI;
 use std::ops::Mul;
 use std::rc::Rc;
 use cgmath::{ElementWise, InnerSpace, Vector3, Vector4, Zero};
@@ -32,14 +33,9 @@ impl Scene {
 
         let image_width = canvas.get_size().x;
         let image_height = (image_width as f32 / aspect_ratio) as u32;
-
         let material_ground= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.8, 0.8, 0.0, 1.0))));
-        // let material_center= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.7, 0.3, 0.3, 1.0))));
-        // let material_left= Rc::new(RefCell::new(MetalMat::new(Vector4::new(0.8, 0.8, 0.8, 1.0), 0.3)));
-
         let material_center= Rc::new(RefCell::new(LambertianMat::new(Vector4::new(0.1, 0.2, 0.5, 1.0))));
         let material_left= Rc::new(RefCell::new(DielectricMat{ index_of_fraction: 1.5}));
-
         let material_right= Rc::new(RefCell::new(MetalMat::new(Vector4::new(0.8, 0.6, 0.2, 1.0), 0.0)));
 
         //World
@@ -47,12 +43,17 @@ impl Scene {
         world.add(Box::new( Sphere::new(Vector3::new(0.0, -100.5, -1.0), 100.0, material_ground) ));
         world.add(Box::new( Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5, material_center )));
         world.add(Box::new( Sphere::new(Vector3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone() )));
-        world.add(Box::new( Sphere::new(Vector3::new(-1.0, 0.0, -1.0), -0.4, material_left.clone() )));
+        world.add(Box::new( Sphere::new(Vector3::new(-1.0, 0.0, -1.0), -0.45, material_left)));
         world.add(Box::new( Sphere::new(Vector3::new(1.0, 0.0, -1.0), 0.5, material_right) ));
 
         //Camera
-        let origin:Vector3<f32> = Vector3::new(0.0,0.0,0.0);
-        let mut camera = Camera::new(origin);
+        let origin:Vector3<f32> = Vector3::new(-2.0,2.0,1.0);
+        let lookat:Vector3<f32> = Vector3::new(0.0,0.0, -1.0);
+        let vup:Vector3<f32> = Vector3::new(0.0,1.0, 0.0);
+        let dist_to_focus = (origin - lookat).magnitude();
+        let aperture = 2.0;
+
+        let mut camera = Camera::new(origin,lookat, vup, PI * 0.1,  aspect_ratio, aperture, dist_to_focus);
                 camera.set_sampler(20);
 
         Self {
